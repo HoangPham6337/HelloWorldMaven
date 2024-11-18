@@ -11,7 +11,7 @@ pipeline {
         
         stage('Application clean') {
             steps {
-                script {
+                withMaven(maven : 'apache-maven-3.6.0') {
                     sh "mvn clean"
                 }
             }
@@ -19,7 +19,7 @@ pipeline {
         
         stage('Application build') {
             steps {
-                script {
+                withMaven(maven : 'apache-maven-3.6.0') {
                     sh "mvn package"
                 }
             }
@@ -36,7 +36,7 @@ pipeline {
                     sh 'git config user.email "hoangpham4171@gmail.com"'
                     
                     // Tagging the repository
-                    sh "git tag -a ${GIT_TAG}"
+                    sh "git tag -a ${GIT_TAG} -m 'Release ${GIT_TAG}'"
                     
                     // Push the tag to the repository securely
                     withCredentials([usernamePassword(credentialsId: 'hoang6337', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
