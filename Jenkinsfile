@@ -11,7 +11,7 @@ pipeline {
         
         stage('Application clean') {
             steps {
-                withMaven(maven : 'apache-maven-3.6.0') {
+                script {
                     sh "mvn clean"
                 }
             }
@@ -19,7 +19,7 @@ pipeline {
         
         stage('Application build') {
             steps {
-                withMaven(maven : 'apache-maven-3.6.0') {
+                script {
                     sh "mvn package"
                 }
             }
