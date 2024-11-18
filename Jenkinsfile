@@ -1,44 +1,48 @@
-pipeline { 
-    agent any 
-    stages {
-        stage('Build') { 
+pipeline {
+    agent any
+    stages{
+        stage('Application retrieval') {
             steps {
-                withMaven(maven : 'apache-maven-3.6.0'){
-                        sh "mvn clean compile"
+                git branch: 'master',
+                credentialsId: 'hoang6337',
+                url: 'https://github.com/HoangPham6337/HelloWorldMaven'
+            }
+        }
+        
+        stage('Application clean') {
+            steps {
+                withMaven(maven : 'apache-maven-3.6.0') {
+                    sh "mvn clean"
                 }
             }
         }
-        stage('Test'){
+        
+        stage('Application build') {
             steps {
-                withMaven(maven : 'apache-maven-3.6.0'){
-                        sh "mvn test"
-                }
-
-            }
-        }
-        stage('build && SonarQube analysis') {
-            steps {
-                withSonarQubeEnv('sonar.tools.devops.****') {
-                    sh 'sonar-scanner -Dsonar.projectKey=myProject -Dsonar.sources=./src'
+                withMaven(maven : 'apache-maven-3.6.0') {
+                    sh "mvn package"
                 }
             }
         }
-        stage("Quality Gate") {
-            steps {
-                timeout(time: 1, unit: 'HOURS') {
-                    // Parameter indicates whether to set pipeline to UNSTABLE if Quality Gate fails
-                    // true = set pipeline to UNSTABLE, false = don't
-                    // Requires SonarScanner for Jenkins 2.7+
-                    waitForQualityGate abortPipeline: true
-                }
+        
+        stage("Tag Version. Release") {
+            environment {
+                GIT_TAG = "Version-2.$BUILD_NUMBER"
             }
-			}
-        stage('Deploy') {
             steps {
-               withMaven(maven : 'apache-maven-3.6.0'){
-                        sh "mvn deploy"
+                script {
+                    // Set Git configurations
+                    sh 'git config user.name "HoangPham6337"'
+                    sh 'git config user.email "hoangpham4171@gmail.com"'
+                    
+                    // Tagging the repository
+                    sh "git tag -a ${GIT_TAG}"
+                    
+                    // Push the tag to the repository securely
+                    withCredentials([usernamePassword(credentialsId: 'hoang6337', usernameVariable: 'GIT_USERNAME', passwordVariable: 'GIT_PASSWORD')]) {
+                        sh "git push https://github.com/HoangPham6337/HelloWorldMaven ${GIT_TAG}"
+                    }
                 }
-
             }
         }
     }
